@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include "listes.h"
@@ -46,4 +47,35 @@ void afficher_elt(cellule_t *cell, int premier) {
 void afficher_pile(liste_t* L) {
 	afficher_elt(L->tete, 1);
 	printf("\n");
+}
+
+int list_len(cellule_t *l) {
+	int len = 0;
+	while (l != NULL) {
+		len++;
+		l = l->suivant;
+	}
+	return len;
+}
+
+bool inclusion(cellule_t *a, cellule_t *b) {
+	while (a != NULL) {
+		cellule_t *c = b;
+		while (c != NULL) {
+			if (!strcmp(c->val, a->val)) {
+				c = NULL;
+			} else {
+				c = c->suivant;
+				if (c == NULL) {
+					return false;
+				}
+			}
+		}
+		a = a->suivant;
+	}
+	return true;
+}
+
+bool list_eq(cellule_t *a, cellule_t *b) {
+	return inclusion(a, b) && inclusion(b, a);
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <assert.h>
 #include "arbres.h"
 #include "arbresphylo.h"
@@ -216,7 +217,96 @@ void afficher_par_niveau (arbre a, FILE* fout) {
     }
 }
 
-int ajouter_carac(arbre* a, char* carac, cellule_t* seq) {
-   printf ("<<<<< À faire: fonction ajouter_carac fichier " __FILE__ "\n >>>>>");
-   return 0;
+/////////////////
+//   ACTE IV   //
+/////////////////
+
+cellule_t* lister_especes(arbre a) {
+    if (a == NULL) {
+      return NULL;
+    } else {
+      if (est_feuille(a)) {
+        cellule_t* newcell=malloc(sizeof(cellule_t));
+        newcell->val = a->valeur;
+        newcell->suivant = NULL;
+        return newcell;
+      } else {
+		// on récupère la liste à gauche et à droite et
+		// on ajoute un lien entre les deux pour les "concaténer"
+        cellule_t* seq1 = lister_especes(a->gauche);
+        cellule_t* seq2 = lister_especes(a->droit);
+        cellule_t* cellnow = seq1;
+        while (cellnow->suivant != NULL) {
+          cellnow = cellnow->suivant;
+        }
+        cellnow->suivant = seq2;
+        return seq1;
+	  }
+  }
+}
+
+typedef struct {
+	bool trouvé;
+	arbre clade;
+	arbre parent;
+} resultat_clade;
+
+resultat_clade ou(resultat_clade a, resultat_clade b) {
+	if (a.trouvé) {
+		return a;
+	} else {
+		return b;
+	}
+}
+
+resultat_clade definir_parent(resultat_clade a, arbre parent) {
+	if (a.parent == NULL) {
+		a.parent = parent;
+	}
+
+	return a;
+}
+
+resultat_clade trouve_clade(arbre arb, cellule_t *liste_especes) {
+	cellule_t *l = lister_especes(arb);
+	if (list_eq(l, liste_especes)) {
+		resultat_clade res = { true, arb, NULL };
+		return res;
+	} else if (list_len(l) < list_len(liste_especes)) {
+		resultat_clade res = { true, NULL, NULL };
+		return res;
+	} else {
+		return definir_parent(
+			ou(
+				trouve_clade(arb->gauche, liste_especes),
+				trouve_clade(arb->droit, liste_especes)
+			),
+			arb
+		);
+	}
+}
+
+int ajouter_carac(arbre *a, char* carac, cellule_t* seq) {
+   resultat_clade result = trouve_clade(*a, seq);
+   if (result.trouvé){
+     arbre arb_cop = result.clade;
+     if (result.parent == NULL){
+        arbre newtree = malloc(sizeof(noeud));
+        newtree->valeur=carac;
+        newtree->droit = arb_cop;
+        newtree->gauche = NULL;
+		    *a = newtree;
+        return 0;
+     } else{
+        arbre old_gauche = result.parent->gauche;
+        result.parent->gauche->valeur = carac;
+        result.parent->gauche->droit = arb_cop;
+        result.parent->gauche->gauche = old_gauche;
+		return 0;
+      }
+   }
+   else{
+       printf("Ne peut ajouter %s: ne forme pas un sous-arbre.",carac);
+	   return 1;
+    }
 }
