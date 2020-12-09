@@ -299,7 +299,7 @@ int ajouter_carac(arbre *a, char* carac, cellule_t* seq) {
         return 1;
      } else{
         arbre old_gauche = result.parent->gauche;
-		result.parent->gauche = malloc(sizeof(neoud));
+		result.parent->gauche = malloc(sizeof(noeud));
         result.parent->gauche->valeur = carac;
         result.parent->gauche->droit = arb_cop;
         result.parent->gauche->gauche = old_gauche;
