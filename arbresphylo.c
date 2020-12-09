@@ -296,17 +296,17 @@ int ajouter_carac(arbre *a, char* carac, cellule_t* seq) {
         newtree->droit = arb_cop;
         newtree->gauche = NULL;
 		    *a = newtree;
-        return 0;
+        return 1;
      } else{
         arbre old_gauche = result.parent->gauche;
         result.parent->gauche->valeur = carac;
         result.parent->gauche->droit = arb_cop;
         result.parent->gauche->gauche = old_gauche;
-		return 0;
+		return 1;
       }
    }
    else{
        printf("Ne peut ajouter %s: ne forme pas un sous-arbre.",carac);
-	   return 1;
+	   return 0;
     }
 }
