@@ -249,6 +249,7 @@ typedef struct {
 	bool trouvé;
 	arbre clade;
 	arbre parent;
+  int profondeur;
 } resultat_clade;
 
 resultat_clade ou(resultat_clade a, resultat_clade b) {
@@ -267,7 +268,48 @@ resultat_clade definir_parent(resultat_clade a, arbre parent) {
 	return a;
 }
 
-resultat_clade trouve_clade(arbre arb, cellule_t *liste_especes) {
+resultat_clade trouve_clade(arbre arb, cellule_t *liste_especes, arbre parent, int depth){
+  cellule_t *l = lister_especes(arb);
+  if (inclusion(liste_especes, l)){
+    if (inclusion(l, liste_especes)){
+      resultat_clade res = { true, arb, parent, depth};
+      return res;
+    }
+    else{
+      resultat_clade res1 = trouve_clade(arb->gauche, liste_especes, arb , depth+1);
+      resultat_clade res2 = trouve_clade(arb->gauche, liste_especes, arb , depth+1);
+      if (res1.trouvé && res2.trouvé){
+        if (res1.profondeur > res2.profondeur){
+          resultat_clade res = {true, res2.clade, res2.parent, res2.profondeur};
+          return res;
+        }
+        else { 
+          resultat_clade res = {true, res1.clade, res1.parent, res1.profondeur};
+          return res; 
+        }
+      }
+      else if (res1.trouvé){
+        resultat_clade res = {true, res1.clade, res1.parent, res1.profondeur};
+        return res;
+
+      }
+      else if (res2.trouvé){
+        resultat_clade res = {true, res2.clade, res2.parent, res2.profondeur};
+        return res;
+      }
+      else{
+        resultat_clade res = {false, NULL, NULL, -1};
+        return res;
+      }
+    }
+  } else  {
+      resultat_clade res = {false, NULL, NULL, -1};
+        return res;
+  }
+
+}
+
+/*resultat_clade trouve_clade(arbre arb, cellule_t *liste_especes) {
 	cellule_t *l = lister_especes(arb);
 	if (list_eq(l, liste_especes)) {
 		resultat_clade res = { true, arb, NULL };
@@ -285,9 +327,9 @@ resultat_clade trouve_clade(arbre arb, cellule_t *liste_especes) {
 		);
 	}
 }
-
+*/
 int ajouter_carac(arbre *a, char* carac, cellule_t* seq) {
-   resultat_clade result = trouve_clade(*a, seq);
+   resultat_clade result = trouve_clade(*a, seq, NULL, 0);
    if (result.trouvé){
      arbre arb_cop = result.clade;
      if (result.parent == NULL){
@@ -299,7 +341,7 @@ int ajouter_carac(arbre *a, char* carac, cellule_t* seq) {
         return 1;
      } else{
         arbre old_gauche = result.parent->gauche;
-		result.parent->gauche = malloc(sizeof(noeud));
+		    result.parent->gauche = malloc(sizeof(noeud));
         result.parent->gauche->valeur = carac;
         result.parent->gauche->droit = arb_cop;
         result.parent->gauche->gauche = old_gauche;

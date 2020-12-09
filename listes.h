@@ -41,6 +41,7 @@ void enlever_tete(liste_t *L);
  */
 void afficher_pile(liste_t* L);
 
+bool inclusion(cellule_t *a, cellule_t *b);
 int list_len(cellule_t *l);
 bool list_eq(cellule_t *a, cellule_t *b);
 
