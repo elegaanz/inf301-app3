@@ -1,42 +1,38 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <ctype.h>
-
 #include "arbres.h"
 
-noeud* nouveau_noeud(void)
-{
-    noeud *n = (noeud*)malloc(sizeof(noeud));
-    assert (n!=NULL);
+#include <assert.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+noeud *nouveau_noeud(void) {
+    noeud *n = (noeud *)malloc(sizeof(noeud));
+    assert(n != NULL);
     n->valeur = NULL;
     n->gauche = NULL;
-    n->droit  = NULL;
+    n->droit = NULL;
     return n;
 }
 
-
 /* buffer pour lire les caractères des espèces sous forme de "mots" (words) */
 #define MAX_WORD_SIZE 255
-char buffer[MAX_WORD_SIZE+1];
+char buffer[MAX_WORD_SIZE + 1];
 
 /* Variable globale qui contient le prochain caractère à traiter */
 static char next_char = ' ';
 
 /* Supprime tous les espaces, tabulations, retour à la ligne */
-#define GLOB(f) \
-    while(isspace(next_char)) { \
-        next_char = fgetc(f);\
+#define GLOB(f)                                                                \
+    while (isspace(next_char)) {                                               \
+        next_char = fgetc(f);                                                  \
     }
-
 
 /* Fonction récursive qui lit un sous-arbre */
 /* Appelée une fois à la racine (debut du fichier), puis récursivement
  * pour chaque nœud interne rencontré. */
-arbre lire_arbre (FILE *f)
-{
+arbre lire_arbre(FILE *f) {
     arbre racine;
 
     GLOB(f); /* lit dans next_char le premier caractère non vide */
@@ -51,22 +47,27 @@ arbre lire_arbre (FILE *f)
     }
 
     if (next_char != '(') {
-        fprintf(stderr, "Error while reading binary tree : '(' or ')' expected at position %ld\n", ftell(f));
-        exit (1);
+        fprintf(
+            stderr,
+            "Error while reading binary tree : '(' or ')' expected at position "
+            "%ld\n",
+            ftell(f));
+        exit(1);
     }
 
     /* On remplit le buffer tant qu'on lit des caractères alphanumériques */
     char *p = buffer; /* début du buffer */
-    next_char = ' '; GLOB(f);
+    next_char = ' ';
+    GLOB(f);
 
     do {
-        *p = next_char;       /* sauvegarde du char courant */
+        *p = next_char; /* sauvegarde du char courant */
         next_char = fgetc(f);
         p++;
-        assert (p < buffer + MAX_WORD_SIZE);
-    } while (! isspace (next_char) && next_char != '(' && next_char != ')');
+        assert(p < buffer + MAX_WORD_SIZE);
+    } while (!isspace(next_char) && next_char != '(' && next_char != ')');
     /* on arrète si le char suivant est un espace ou une parenthèse */
-    *p='\0'; /* on ferme la chaîne de caractères dans le buffer */
+    *p = '\0'; /* on ferme la chaîne de caractères dans le buffer */
 
     racine = nouveau_noeud();
     racine->valeur = strdup(buffer); /* dupliquer le mot lu */
@@ -74,11 +75,11 @@ arbre lire_arbre (FILE *f)
     GLOB(f);
 
     if (next_char == ')') {
-        next_char = ' '; /* on est sur une feuille, on prépare la lecture du prochain nœud */
-    }
-    else {
-        racine->gauche = lire_arbre (f); /* appel récursif pour le fils gauche */
-        racine->droit  = lire_arbre (f); /* idem pour le droit */
+        next_char = ' '; /* on est sur une feuille, on prépare la lecture du
+                            prochain nœud */
+    } else {
+        racine->gauche = lire_arbre(f); /* appel récursif pour le fils gauche */
+        racine->droit = lire_arbre(f);  /* idem pour le droit */
 
         GLOB(f); /* lit jusqu'au ')' fermant */
 
@@ -90,28 +91,25 @@ arbre lire_arbre (FILE *f)
     }
     return racine;
 }
-int est_feuill(arbre a){
-  return ((a->droit == NULL) && (a->gauche == NULL));
-}
+int est_feuill(arbre a) { return ((a->droit == NULL) && (a->gauche == NULL)); }
 
-void affiche_sous_arbre(FILE* f, noeud *a) {
+void affiche_sous_arbre(FILE *f, noeud *a) {
     if (est_feuill(a)) {
-        fprintf(f,"%s [shape=box, color=pink, colorfill=pink, style=filled]\n", a->valeur);
+        fprintf(f, "%s [shape=box, color=pink, colorfill=pink, style=filled]\n",
+                a->valeur);
     } else {
-        if (a->gauche!=NULL) {
-            fprintf(f,"%s -> %s [label=non]\n", a->valeur, a->gauche->valeur);
+        if (a->gauche != NULL) {
+            fprintf(f, "%s -> %s [label=non]\n", a->valeur, a->gauche->valeur);
             affiche_sous_arbre(f, a->gauche);
         }
-        if (a->droit!=NULL) {
-            fprintf(f,"%s -> %s [label=oui]\n", a->valeur, a->droit->valeur);
+        if (a->droit != NULL) {
+            fprintf(f, "%s -> %s [label=oui]\n", a->valeur, a->droit->valeur);
             affiche_sous_arbre(f, a->droit);
-
         }
     }
 }
 
-void affiche_arbre (noeud *racine)
-{
+void affiche_arbre(noeud *racine) {
     FILE *f = fopen("arbre.dot", "w");
     if (f == NULL) {
         printf("oh no, impossible de générer un manifik graf\n");
@@ -120,6 +118,5 @@ void affiche_arbre (noeud *racine)
     fprintf(f, "digraph {\n");
     affiche_sous_arbre(f, racine);
     fprintf(f, "}\n");
-	fclose(f);
+    fclose(f);
 }
-
